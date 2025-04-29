@@ -1,0 +1,5 @@
+# YOLOE model paths configuration
+models:
+  yoloe:
+    yoloe-seg: /home/a/PycharmProjects/EurekAnno/weights/yoloe-11s-seg.pt
+    yoloe-seg-pf: /home/a/PycharmProjects/EurekAnno/weights/yoloe-11l-seg-pf.pt

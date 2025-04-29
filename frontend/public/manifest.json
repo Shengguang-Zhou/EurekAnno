@@ -1,0 +1,9 @@
+{
+  "short_name": "EurekAnno",
+  "name": "EurekAnno - YOLO Annotation Tool",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+} 
