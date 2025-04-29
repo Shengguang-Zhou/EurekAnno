@@ -1,0 +1,158 @@
+# Inference
+## 文本提示
+```
+from ultralytics import YOLOE
+
+# Initialize a YOLOE model
+model = YOLOE("yoloe-11l-seg.pt")  # or select yoloe-11s/m-seg.pt for different sizes
+
+# Set text prompt to detect person and bus. You only need to do this once after you load the model.
+names = ["person", "bus"]
+model.set_classes(names, model.get_text_pe(names))
+
+# Run detection on the given image
+results = model.predict("path/to/image.jpg")
+
+# Show results
+results[0].show()
+```
+
+
+## 视觉提示
+Visual prompts allow you to guide the model by showing it visual examples of the target classes, rather than describing them in text.
+
+visual_prompts argument takes a dictionary with two keys: bboxes 和 cls. Each bounding box in bboxes should tightly enclose an example of the object you want the model to detect, and the corresponding entry in cls specifies the class label for that box. This pairing tells the model, "This is what class X looks like—now find more like it."
+
+Class IDs (cls) in visual_prompts are used to associate each bounding box with a specific category within your prompt. They aren't fixed labels, but temporary identifiers you assign to each example. The only requirement is that class IDs must be sequential, starting from 0. This helps the model correctly associate each box with its respective class.
+
+You can provide visual prompts directly within the same image you want to run inference on. For example:
+```
+import numpy as np
+
+from ultralytics import YOLOE
+from ultralytics.models.yolo.yoloe import YOLOEVPSegPredictor
+
+# Initialize a YOLOE model
+model = YOLOE("yoloe-11l-seg.pt")
+
+# Define visual prompts using bounding boxes and their corresponding class IDs.
+# Each box highlights an example of the object you want the model to detect.
+visual_prompts = dict(
+    bboxes=np.array(
+        [
+            [221.52, 405.8, 344.98, 857.54],  # Box enclosing person
+            [120, 425, 160, 445],  # Box enclosing glasses
+        ],
+    ),
+    cls=np.array(
+        [
+            0,  # ID to be assigned for person
+            1,  # ID to be assigned for glassses
+        ]
+    ),
+)
+
+# Run inference on an image, using the provided visual prompts as guidance
+results = model.predict(
+    "ultralytics/assets/bus.jpg",
+    visual_prompts=visual_prompts,
+    predictor=YOLOEVPSegPredictor,
+)
+
+# Show results
+results[0].show()
+```
+
+Or you can provide examples from a separate reference image using the refer_image argument. In that case, the bboxes 和 cls 于 visual_prompts should describe objects in the reference image, not the target image you're making predictions on:
+
+If source is a video or stream, the model automatically uses the first frame as the refer_image. This means your visual_prompts are applied to that initial frame to help the model understand what to look for in the rest of the video. Alternatively, you can explicitly pass any specific frame as the refer_image to control which visual examples the model uses as reference.
+
+```
+import numpy as np
+
+from ultralytics import YOLOE
+from ultralytics.models.yolo.yoloe import YOLOEVPSegPredictor
+
+# Initialize a YOLOE model
+model = YOLOE("yoloe-11l-seg.pt")
+
+# Define visual prompts based on a separate reference image
+visual_prompts = dict(
+    bboxes=np.array([[221.52, 405.8, 344.98, 857.54]]),  # Box enclosing person
+    cls=np.array([0]),  # ID to be assigned for person
+)
+
+# Run prediction on a different image, using reference image to guide what to look for
+results = model.predict(
+    "ultralytics/assets/zidane.jpg",  # Target image for detection
+    refer_image="ultralytics/assets/bus.jpg",  # Reference image used to get visual prompts
+    visual_prompts=visual_prompts,
+    predictor=YOLOEVPSegPredictor,
+)
+
+# Show results
+results[0].show()
+```
+
+You can also pass multiple target images to run prediction on:
+```
+import numpy as np
+
+from ultralytics import YOLOE
+from ultralytics.models.yolo.yoloe import YOLOEVPSegPredictor
+
+# Initialize a YOLOE model
+model = YOLOE("yoloe-11l-seg.pt")
+
+# Define visual prompts using bounding boxes and their corresponding class IDs.
+# Each box highlights an example of the object you want the model to detect.
+visual_prompts = dict(
+    bboxes=[
+        np.array(
+            [
+                [221.52, 405.8, 344.98, 857.54],  # Box enclosing person
+                [120, 425, 160, 445],  # Box enclosing glasses
+            ],
+        ),
+        np.array([[150, 200, 1150, 700]]),
+    ],
+    cls=[
+        np.array(
+            [
+                0,  # ID to be assigned for person
+                1,  # ID to be assigned for glasses
+            ]
+        ),
+        np.array([0]),
+    ],
+)
+
+# Run inference on multiple image, using the provided visual prompts as guidance
+results = model.predict(
+    ["ultralytics/assets/bus.jpg", "ultralytics/assets/zidane.jpg"],
+    visual_prompts=visual_prompts,
+    predictor=YOLOEVPSegPredictor,
+)
+
+# Show results
+results[0].show()
+```
+
+
+## Prompt free
+YOLOE also includes prompt-free variants that come with a built-in vocabulary. These models don't require any prompts and work like traditional YOLO models. Instead of relying on user-provided labels or visual examples, they detect objects from a predefined list of 4,585 classes based on the tag set used by the Recognize Anything Model Plus (RAM++).
+
+```
+from ultralytics import YOLOE
+
+# Initialize a YOLOE model
+model = YOLOE("yoloe-11l-seg-pf.pt")
+
+# Run prediction. No prompts required.
+results = model.predict("path/to/image.jpg")
+
+# Show results
+results[0].show()
+```
+
+

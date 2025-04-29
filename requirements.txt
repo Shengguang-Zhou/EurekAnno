@@ -1,0 +1,9 @@
+opencv-python~=4.11.0.86
+numpy~=2.2.5
+ultralytics~=8.3.120
+fastapi~=0.115.12
+pydantic~=2.11.3
+pillow~=11.2.1
+PyYAML~=6.0.2
+uvicorn~=0.34.2
+matplotlib

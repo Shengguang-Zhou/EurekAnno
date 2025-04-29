@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Frontend Architecture Rules
+
+## File Structure
+- React components should be organized by feature or module
+- Keep files under 700 lines of code
+- Split large components into smaller subcomponents
+- Use separate files for styles
+- Maintain clean separation of concerns
+
+## API Integration
+- API endpoints in YOLOE backend:
+  - `/prompt-free` - For prompt-free detection
+  - `/text-prompt` - For text-prompted detection 
+  - `/image-prompt` - For image-prompted detection
+
+## Component Organization
+- Use functional components with hooks
+- Avoid using class components
+- Extract common logic into custom hooks
+- Break UI into small, reusable components
+
+## Layout Guidelines
+- Left sidebar should take 1/4 of the width
+- Mode selection tabs should be vertical on left side
+- Main content area should take 3/4 of the width
+- UI should be responsive and mobile-friendly
+
+## Key Components:
+- [App.js](mdc:frontend/src/App.js) - Main application layout
+- [api.js](mdc:frontend/src/services/api.js) - API service
+- [ImageUploader.js](mdc:frontend/src/components/ImageUploader.js) - Handles image uploads
+- [TextPromptMode.js](mdc:frontend/src/components/DetectionModes/TextPromptMode.js) - Text detection mode
+- [ImagePromptMode.js](mdc:frontend/src/components/DetectionModes/ImagePromptMode.js) - Image detection mode
+- [PromptFreeMode.js](mdc:frontend/src/components/DetectionModes/PromptFreeMode.js) - Prompt-free detection
