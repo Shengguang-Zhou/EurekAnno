@@ -117,7 +117,8 @@ const ResultsPanel = () => {
         sx={{
           flexGrow: 1,
           overflow: 'auto',
-          p: 1.5
+          p: 1.5,
+          maxHeight: 'calc(100% - 36px)'
         }}
       >
         {activeTab === 0 ? (
@@ -155,12 +156,12 @@ const ClassesTab = ({ classes, objectsByClass, classColors, selectedClass, onCla
   }
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ height: '100%' }}>
       <Typography variant="subtitle2" fontSize="0.8rem">
         Detected Classes ({classes.length})
       </Typography>
       
-      <List disablePadding dense>
+      <List disablePadding dense sx={{ maxHeight: 'calc(100% - 24px)', overflow: 'auto' }}>
         {classes.map((className, index) => {
           const objectCount = objectsByClass[index]?.length || 0;
           const isSelected = selectedClass === index;
@@ -237,7 +238,7 @@ const ObjectsTab = ({ objects, classes, selectedClass, classColors, hiddenObject
   }
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={{ height: '100%' }}>
       <Typography variant="subtitle2" fontSize="0.8rem">
         {selectedClass !== null 
           ? `Objects of class "${classes[selectedClass] || 'Unknown'}" (${filteredObjects.length})`
@@ -245,7 +246,7 @@ const ObjectsTab = ({ objects, classes, selectedClass, classColors, hiddenObject
         }
       </Typography>
       
-      <List disablePadding dense>
+      <List disablePadding dense sx={{ maxHeight: 'calc(100% - 24px)', overflow: 'auto' }}>
         {filteredObjects.map((obj, index) => {
           if (!obj || obj.class_id === undefined) return null;
           

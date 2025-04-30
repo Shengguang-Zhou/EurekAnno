@@ -195,6 +195,8 @@ const AnnotationCanvas = () => {
     setStagePosition({ x: 0, y: 0 });
     setSelectedObjectIndex(null); // Deselect when image changes
     setSelectedShapeRef(null);
+    
+    setEditMode(EDIT_MODES.SELECT);
   }, [image, currentImage, updateImageDimensions]);
 
   /**
@@ -263,6 +265,13 @@ const AnnotationCanvas = () => {
       setEditMode(EDIT_MODES.SELECT);
     }
   }, [detectionMode]);
+  
+  // Ensure canvas switches to editing mode when detection results are received
+  useEffect(() => {
+    if (currentResults && Array.isArray(currentResults.objects) && currentResults.objects.length > 0) {
+      setEditMode(EDIT_MODES.SELECT);
+    }
+  }, [currentResults]);
 
   // Clear selection if the selected object becomes hidden
   useEffect(() => {

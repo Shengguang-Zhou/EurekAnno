@@ -116,7 +116,7 @@ const AppContent = () => {
           <Grid item xs={12} md={3} lg={3} sx={{ height: isMobile ? 'auto' : '100%' }}>
             <Grid container spacing={3} sx={{ height: '100%' }}>
               {/* Image Gallery - Upper right */}
-              <Grid item xs={12} sx={{ height: '60%' }}>
+              <Grid item xs={12} sx={{ height: '50%' }}>
                 <ImageGallery />
               </Grid>
               
@@ -126,7 +126,7 @@ const AppContent = () => {
               </Grid>
               
               {/* Results Panel - Bottom right */}
-              <Grid item xs={12} sx={{ height: '25%' }}>
+              <Grid item xs={12} sx={{ height: '35%' }}>
                 <ResultsPanel />
               </Grid>
             </Grid>
@@ -148,4 +148,4 @@ const App = () => {
   );
 };
 
-export default App; 
+export default App;  
