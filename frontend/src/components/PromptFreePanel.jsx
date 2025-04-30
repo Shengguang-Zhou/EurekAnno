@@ -61,8 +61,19 @@ const PromptFreePanel = () => {
       
     } catch (error) {
       console.error('Detection error:', error);
-      setError(error.message || 'Error during detection');
-      showSnackbar(`Error: ${error.message || 'Failed to process detection'}`, 'error');
+      const errorMessage = error.response?.status === 400 
+        ? 'Model not found or configuration error. Please check server logs.'
+        : error.message || 'Error during detection';
+      
+      setError(errorMessage);
+      showSnackbar(`Error: ${errorMessage}`, 'error');
+      
+      if (currentImage) {
+        addDetectionResult(currentImage.id, { 
+          classes: [], 
+          objects: [] 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -164,4 +175,4 @@ const PromptFreePanel = () => {
   );
 };
 
-export default PromptFreePanel; 
+export default PromptFreePanel;  

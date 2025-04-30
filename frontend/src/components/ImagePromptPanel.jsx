@@ -76,8 +76,19 @@ const ImagePromptPanel = () => {
       
     } catch (error) {
       console.error('Detection error:', error);
-      setError(error.message || 'Error during detection');
-      showSnackbar(`Error: ${error.message || 'Failed to process detection'}`, 'error');
+      const errorMessage = error.response?.status === 400 
+        ? 'Model not found or configuration error. Please check server logs.'
+        : error.message || 'Error during detection';
+      
+      setError(errorMessage);
+      showSnackbar(`Error: ${errorMessage}`, 'error');
+      
+      if (currentImage && imagePrompts && imagePrompts.bboxes && imagePrompts.bboxes.length > 0) {
+        addDetectionResult(currentImage.id, { 
+          classes: ['Object'], 
+          objects: [] 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -204,4 +215,4 @@ const ImagePromptPanel = () => {
   );
 };
 
-export default ImagePromptPanel; 
+export default ImagePromptPanel;  
