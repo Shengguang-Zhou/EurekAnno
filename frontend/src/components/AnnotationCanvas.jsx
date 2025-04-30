@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Stage, Layer, Rect, Image as KonvaImage, Group, Text, Tag, Label, Line, Transformer } from 'react-konva';
-import { Box, Paper, Skeleton, Typography, useTheme, IconButton, Tooltip, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Paper, Skeleton, Typography, useTheme, IconButton, Tooltip, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PanToolIcon from '@mui/icons-material/PanTool';
@@ -544,28 +544,46 @@ const AnnotationCanvas = () => {
           onDragEnd={(e) => handleGroupDragEnd(e, i)}
           ref={isSelected ? (node) => setSelectedShapeRef(node) : null}
         >
+          {/* Bounding box */}
           <Rect
             x={0}
             y={0}
             width={absBox.width}
             height={absBox.height}
             stroke={color}
-            fill={isSelected ? color : 'transparent'}
-            opacity={isSelected ? 0.1 : 1}
+            fill={isSelected || isHighlighted ? color : 'transparent'}
+            opacity={isSelected ? 0.15 : isHighlighted ? 0.08 : 1}
             strokeWidth={strokeW}
             dash={isHighlighted && !isSelected ? [10, 5] : undefined}
             lineJoin="round"
+            cornerRadius={2}
             onTransformEnd={(e) => handleTransformEnd(e, i)}
+            shadowColor={isSelected || isHighlighted ? color : 'transparent'}
+            shadowBlur={isSelected ? 8 : isHighlighted ? 4 : 0}
+            shadowOpacity={0.3}
           />
-          <Label x={0} y={-25}>
-            <Tag fill={color} cornerRadius={3} opacity={0.85} />
+          
+          {/* Class label with confidence */}
+          <Label x={0} y={-28}>
+            <Tag 
+              fill={color} 
+              cornerRadius={4} 
+              opacity={0.9}
+              shadowColor="rgba(0,0,0,0.3)"
+              shadowBlur={3}
+              shadowOffsetY={1}
+              shadowOpacity={0.3}
+            />
             <Text
               text={`${className} ${Math.round((obj.confidence || 0) * 100)}%`}
-              fontSize={14}
-              padding={5}
+              fontSize={12}
+              fontStyle="bold"
+              padding={6}
               fill="white"
             />
           </Label>
+          
+          {/* Segmentation mask */}
           {localMaskPoints && (
             <Line
               points={localMaskPoints}
@@ -573,7 +591,10 @@ const AnnotationCanvas = () => {
               strokeWidth={2}
               closed
               fill={color}
-              opacity={0.2}
+              opacity={isSelected ? 0.25 : isHighlighted ? 0.15 : 0.1}
+              shadowColor={isSelected || isHighlighted ? color : 'transparent'}
+              shadowBlur={isSelected ? 10 : isHighlighted ? 5 : 0}
+              shadowOpacity={0.2}
             />
           )}
         </Group>
@@ -681,9 +702,10 @@ const AnnotationCanvas = () => {
               zIndex: 10,
               display: 'flex',
               gap: 1,
-              bgcolor: 'rgba(255,255,255,0.8)',
+              bgcolor: 'rgba(255,255,255,0.9)',
               borderRadius: 1,
               p: 0.5,
+              boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
             }}
           >
             <Tooltip title="Select Mode">
@@ -691,6 +713,10 @@ const AnnotationCanvas = () => {
                 size="small" 
                 color={editMode === EDIT_MODES.SELECT ? "primary" : "default"}
                 onClick={() => setEditMode(EDIT_MODES.SELECT)}
+                sx={{ 
+                  bgcolor: editMode === EDIT_MODES.SELECT ? 'rgba(238, 76, 44, 0.1)' : 'transparent',
+                  '&:hover': { bgcolor: editMode === EDIT_MODES.SELECT ? 'rgba(238, 76, 44, 0.15)' : 'rgba(0, 0, 0, 0.04)' }
+                }}
               >
                 <EditIcon />
               </IconButton>
@@ -701,6 +727,10 @@ const AnnotationCanvas = () => {
                 size="small" 
                 color={editMode === EDIT_MODES.DRAW ? "primary" : "default"}
                 onClick={() => setEditMode(EDIT_MODES.DRAW)}
+                sx={{ 
+                  bgcolor: editMode === EDIT_MODES.DRAW ? 'rgba(238, 76, 44, 0.1)' : 'transparent',
+                  '&:hover': { bgcolor: editMode === EDIT_MODES.DRAW ? 'rgba(238, 76, 44, 0.15)' : 'rgba(0, 0, 0, 0.04)' }
+                }}
               >
                 <BrushIcon />
               </IconButton>
@@ -711,6 +741,10 @@ const AnnotationCanvas = () => {
                 size="small" 
                 color={editMode === EDIT_MODES.PAN ? "primary" : "default"}
                 onClick={() => setEditMode(EDIT_MODES.PAN)}
+                sx={{ 
+                  bgcolor: editMode === EDIT_MODES.PAN ? 'rgba(238, 76, 44, 0.1)' : 'transparent',
+                  '&:hover': { bgcolor: editMode === EDIT_MODES.PAN ? 'rgba(238, 76, 44, 0.15)' : 'rgba(0, 0, 0, 0.04)' }
+                }}
               >
                 <PanToolIcon />
               </IconButton>
@@ -723,6 +757,10 @@ const AnnotationCanvas = () => {
                     size="small" 
                     color="primary"
                     onClick={handleClassMenuOpen}
+                    sx={{ 
+                      bgcolor: 'rgba(238, 76, 44, 0.1)',
+                      '&:hover': { bgcolor: 'rgba(238, 76, 44, 0.15)' }
+                    }}
                   >
                     <ClassIcon />
                   </IconButton>
@@ -732,6 +770,10 @@ const AnnotationCanvas = () => {
                     size="small" 
                     color="error"
                     onClick={handleDeleteSelected}
+                    sx={{ 
+                      bgcolor: 'rgba(244, 67, 54, 0.1)',
+                      '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.15)' }
+                    }}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -739,6 +781,52 @@ const AnnotationCanvas = () => {
               </>
             )}
           </Box>
+          
+          {/* Class Tags Display - Similar to DinoX UI */}
+          {currentResults && Array.isArray(currentResults.classes) && currentResults.classes.length > 0 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 10,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 10,
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: 0.5,
+                maxWidth: '80%',
+                bgcolor: 'rgba(255,255,255,0.9)',
+                borderRadius: 2,
+                py: 0.5,
+                px: 1,
+                boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
+              }}
+            >
+              {currentResults.classes.map((className, index) => {
+                const colors = generateColors(currentResults.classes.length);
+                const color = colors[index];
+                const objectCount = currentResults.objects.filter(obj => obj && obj.class_id === index).length;
+                
+                return (
+                  <Chip
+                    key={index}
+                    label={`${className} (${objectCount})`}
+                    size="small"
+                    sx={{
+                      bgcolor: color,
+                      color: 'white',
+                      fontWeight: 500,
+                      fontSize: '0.75rem',
+                      height: 24,
+                      '& .MuiChip-label': { px: 1 },
+                      boxShadow: '0px 1px 2px rgba(0,0,0,0.2)',
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          )}
           
           {/* Class selection menu */}
           {currentResults && Array.isArray(currentResults.classes) && Array.isArray(currentResults.objects) && (
@@ -765,6 +853,14 @@ const AnnotationCanvas = () => {
                     key={index}
                     onClick={() => handleClassChange(index)}
                     selected={isSelected}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(238, 76, 44, 0.08)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(238, 76, 44, 0.12)',
+                        },
+                      },
+                    }}
                   >
                     <ListItemIcon>
                       <Box
@@ -788,7 +884,7 @@ const AnnotationCanvas = () => {
             <Box
               sx={{
                 position: 'absolute',
-                top: 10,
+                top: 60,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 bgcolor: 'rgba(0,0,0,0.7)',
@@ -797,9 +893,10 @@ const AnnotationCanvas = () => {
                 px: 2,
                 borderRadius: 2,
                 zIndex: 10,
+                boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
               }}
             >
-              <Typography variant="caption">{getInstructions()}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 500 }}>{getInstructions()}</Typography>
             </Box>
           )}
           
@@ -858,7 +955,11 @@ const AnnotationCanvas = () => {
               <IconButton
                 size="small"
                 onClick={handleResetView}
-                sx={{ bgcolor: 'rgba(255,255,255,0.8)' }}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.9)',
+                  boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,1)' }
+                }}
               >
                 <CenterFocusStrongIcon />
               </IconButton>
