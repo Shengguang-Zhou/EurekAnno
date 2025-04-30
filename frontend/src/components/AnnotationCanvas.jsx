@@ -268,8 +268,9 @@ const AnnotationCanvas = () => {
   
   // Ensure canvas switches to editing mode when detection results are received
   useEffect(() => {
-    if (currentResults && Array.isArray(currentResults.objects) && currentResults.objects.length > 0) {
+    if (currentResults) {
       setEditMode(EDIT_MODES.SELECT);
+      console.log('Detection results received, switching to SELECT mode:', currentResults);
     }
   }, [currentResults]);
 
@@ -500,14 +501,25 @@ const AnnotationCanvas = () => {
    * Renders bounding boxes and masks from detection results
    */
   function renderDetections() {
-    if (!currentResults || !Array.isArray(currentResults.objects) || !Array.isArray(currentResults.classes) || !image) {
+    if (!currentResults || !currentResults.classes || !image) {
       return null;
     }
+    
     const detectionColors = generateColors(currentResults.classes.length);
+    
+    console.log("Rendering detections:", currentResults);
+    
+    if (!Array.isArray(currentResults.objects) || currentResults.objects.length === 0) {
+      console.log("No objects to render");
+      return null;
+    }
 
     return currentResults.objects.map((obj, i) => {
       // Basic validation for object structure
-      if (!obj || obj.class_id === undefined || !obj.bbox || !Array.isArray(obj.bbox)) return null;
+      if (!obj || obj.class_id === undefined || !obj.bbox || !Array.isArray(obj.bbox)) {
+        console.log(`Invalid object at index ${i}:`, obj);
+        return null;
+      }
       
       // Skip hidden objects
       if (hiddenObjects.includes(i)) return null;
@@ -552,7 +564,7 @@ const AnnotationCanvas = () => {
             height={absBox.height}
             stroke={color}
             fill={isSelected || isHighlighted ? color : 'transparent'}
-            opacity={isSelected ? 0.15 : isHighlighted ? 0.08 : 1}
+            opacity={isSelected ? 0.2 : isHighlighted ? 0.1 : 1}
             strokeWidth={strokeW}
             dash={isHighlighted && !isSelected ? [10, 5] : undefined}
             lineJoin="round"
@@ -591,10 +603,10 @@ const AnnotationCanvas = () => {
               strokeWidth={2}
               closed
               fill={color}
-              opacity={isSelected ? 0.25 : isHighlighted ? 0.15 : 0.1}
+              opacity={isSelected ? 0.35 : isHighlighted ? 0.25 : 0.2}  // Increased opacity for better visibility
               shadowColor={isSelected || isHighlighted ? color : 'transparent'}
               shadowBlur={isSelected ? 10 : isHighlighted ? 5 : 0}
-              shadowOpacity={0.2}
+              shadowOpacity={0.3}
             />
           )}
         </Group>

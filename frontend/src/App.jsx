@@ -114,14 +114,14 @@ const AppContent = () => {
           
           {/* Right Sidebar */}
           <Grid item xs={12} md={3} lg={3} sx={{ height: isMobile ? 'auto' : '100%' }}>
-            <Grid container spacing={3} sx={{ height: '100%' }}>
+            <Grid container spacing={2} sx={{ height: '100%' }}>
               {/* Image Gallery - Upper right */}
-              <Grid item xs={12} sx={{ height: '50%' }}>
+              <Grid item xs={12} sx={{ height: '45%' }}>
                 <ImageGallery />
               </Grid>
               
               {/* Detection Controls - Middle right */}
-              <Grid item xs={12} sx={{ height: '15%' }}>
+              <Grid item xs={12} sx={{ height: '20%' }}>
                 <DetectionControls />
               </Grid>
               
@@ -148,4 +148,4 @@ const App = () => {
   );
 };
 
-export default App;  
+export default App;    

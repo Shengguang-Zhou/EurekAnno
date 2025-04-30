@@ -118,7 +118,10 @@ const ResultsPanel = () => {
           flexGrow: 1,
           overflow: 'auto',
           p: 1.5,
-          maxHeight: 'calc(100% - 36px)'
+          maxHeight: 'calc(100% - 48px)',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          boxShadow: 'inset 0 0 5px rgba(0,0,0,0.05)'
         }}
       >
         {activeTab === 0 ? (
@@ -161,7 +164,18 @@ const ClassesTab = ({ classes, objectsByClass, classColors, selectedClass, onCla
         Detected Classes ({classes.length})
       </Typography>
       
-      <List disablePadding dense sx={{ maxHeight: 'calc(100% - 24px)', overflow: 'auto' }}>
+      <List disablePadding dense sx={{ 
+        maxHeight: 'calc(100% - 24px)', 
+        overflow: 'auto', 
+        borderRadius: 1,
+        bgcolor: 'grey.50',
+        '& .MuiListItem-root': {
+          borderRadius: 1,
+          mb: 0.5,
+          mx: 0.5,
+          width: 'calc(100% - 8px)'
+        }
+      }}>
         {classes.map((className, index) => {
           const objectCount = objectsByClass[index]?.length || 0;
           const isSelected = selectedClass === index;
@@ -246,7 +260,18 @@ const ObjectsTab = ({ objects, classes, selectedClass, classColors, hiddenObject
         }
       </Typography>
       
-      <List disablePadding dense sx={{ maxHeight: 'calc(100% - 24px)', overflow: 'auto' }}>
+      <List disablePadding dense sx={{ 
+        maxHeight: 'calc(100% - 24px)', 
+        overflow: 'auto',
+        borderRadius: 1,
+        bgcolor: 'grey.50',
+        '& .MuiListItem-root': {
+          borderRadius: 1,
+          mb: 0.5,
+          mx: 0.5,
+          width: 'calc(100% - 8px)'
+        } 
+      }}>
         {filteredObjects.map((obj, index) => {
           if (!obj || obj.class_id === undefined) return null;
           
