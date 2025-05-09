@@ -1,0 +1,73 @@
+### Test YOLOe Image Prompt API with same image (correct format)
+POST http://0.0.0.0:8000/api/v1/yoloe/image-prompt
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test_image.jpg"
+Content-Type: image/jpeg
+
+< ./test_image.jpg
+--WebAppBoundary
+Content-Disposition: form-data; name="bboxes"
+
+[[100,200,300,400],[150,250,350,450]]
+--WebAppBoundary
+Content-Disposition: form-data; name="cls"
+
+[0,1]
+--WebAppBoundary
+Content-Disposition: form-data; name="return_image"
+
+true
+--WebAppBoundary--
+
+### Test YOLOe Image Prompt API with reference image
+POST http://0.0.0.0:8000/api/v1/yoloe/image-prompt
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="target_image.jpg"
+Content-Type: image/jpeg
+
+< ./target_image.jpg
+--WebAppBoundary
+Content-Disposition: form-data; name="refer_file"; filename="reference_image.jpg"
+Content-Type: image/jpeg
+
+< ./reference_image.jpg
+--WebAppBoundary
+Content-Disposition: form-data; name="bboxes"
+
+[[221.52,405.8,344.98,857.54]]
+--WebAppBoundary
+Content-Disposition: form-data; name="cls"
+
+[0]
+--WebAppBoundary
+Content-Disposition: form-data; name="return_image"
+
+true
+--WebAppBoundary--
+
+### Test YOLOe Image Prompt API with flexible formatting
+POST http://0.0.0.0:8000/api/v1/yoloe/image-prompt
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test_image.jpg"
+Content-Type: image/jpeg
+
+< ./test_image.jpg
+--WebAppBoundary
+Content-Disposition: form-data; name="bboxes"
+
+[[0,200][100,300],[300,400],[500,600]]
+--WebAppBoundary
+Content-Disposition: form-data; name="cls"
+
+[0,1,2,3]
+--WebAppBoundary
+Content-Disposition: form-data; name="return_image"
+
+true
+--WebAppBoundary--

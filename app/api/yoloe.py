@@ -12,7 +12,7 @@ import json
 import logging
 import zipfile
 import numpy as np
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException, Body
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
@@ -156,17 +156,37 @@ async def text_prompt_inference(
         logging.error(f"Error during text-prompt inference: {e}")
         raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
 
-@router.post("/image-prompt")
+@router.post("/image-prompt",
+    summary="Run YOLOe detection with visual prompts",
+    description="""
+    Performs object detection using visual prompts where example objects are specified with bounding boxes.
+
+    **Visual Prompts**:
+    - Each bounding box in `bboxes` should tightly enclose an example of the object you want to detect
+    - The corresponding entry in `cls` specifies the class label for that box
+    - Class IDs should be sequential, starting from 0
+
+    **How to use**:
+    1. **Same-image prompting**: Use bounding boxes from the target image itself
+       - Upload your image as `file`
+       - Provide bounding boxes and class IDs for objects in that image
+
+    2. **Reference-image prompting**: Use bounding boxes from a separate reference image
+       - Upload your target image as `file`
+       - Upload a reference image as `refer_file`
+       - Provide bounding boxes and class IDs for objects in the reference image
+    """
+)
 async def image_prompt_inference(
-    file: UploadFile = File(...),
-    bboxes: str = Form(...), # Receive as JSON string
-    cls: str = Form(...),    # Receive as JSON string
-    model_path: Optional[str] = Form("default"),
-    conf: float = Form(0.25),
-    iou: float = Form(0.7),
-    return_image: bool = Form(False),
-    retina_masks: bool = Form(False),
-    refer_file: Optional[UploadFile] = File(default=None)
+    file: UploadFile = File(..., description="Target image for detection"),
+    bboxes: str = Form(..., description="JSON array of bounding boxes. Format: [[x1,y1,x2,y2], [x1,y1,x2,y2], ...]"),
+    cls: str = Form(..., description="JSON array of class IDs (must start from 0). Format: [0, 1, ...]"),
+    model_path: Optional[str] = Form("default", description="Path to model weights or 'default' for built-in model"),
+    conf: float = Form(0.25, description="Confidence threshold (0.0-1.0)"),
+    iou: float = Form(0.7, description="IoU threshold for non-max suppression (0.0-1.0)"),
+    return_image: bool = Form(False, description="If true, returns annotated image in base64 format"),
+    retina_masks: bool = Form(False, description="If true, returns high-quality segmentation masks"),
+    refer_file: Optional[UploadFile] = File(None, description="Reference image containing visual prompt examples (optional)")
 ):
     try:
         img_bgr = read_imagefile(file)
@@ -187,19 +207,112 @@ async def image_prompt_inference(
             raise HTTPException(status_code=500, detail="Error processing reference image file.")
 
     try:
-        # Validate JSON inputs with proper error handling for empty strings
+        # Validate JSON inputs with proper error handling
         if not bboxes or bboxes.isspace():
             raise ValueError("bboxes parameter cannot be empty")
         if not cls or cls.isspace():
             raise ValueError("cls parameter cannot be empty")
-            
-        bboxes_list = json.loads(bboxes)
-        cls_list = json.loads(cls)
-        
-        if not isinstance(bboxes_list, list) or not isinstance(cls_list, list):
-            raise ValueError("bboxes and cls must be JSON arrays.")
+
+        # First, try to parse standard JSON format
+        try:
+            bboxes_list = json.loads(bboxes)
+        except json.JSONDecodeError:
+            # If standard JSON fails, try fixing common formatting issues
+
+            # Replace single quotes with double quotes
+            fixed_bboxes = bboxes.replace("'", "\"")
+
+            # Fix missing commas between brackets
+            fixed_bboxes = fixed_bboxes.replace("][", "],[")
+
+            # Fix malformed brackets with incorrect syntax like [[0,200[
+            fixed_bboxes = fixed_bboxes.replace("[,", "[0,")
+            fixed_bboxes = fixed_bboxes.replace(",[", ",[0")
+            fixed_bboxes = fixed_bboxes.replace("[", "[")
+            fixed_bboxes = fixed_bboxes.replace("]", "]")
+
+            # Replace invalid entries like [0,200[ with [0,200]
+            import re
+            fixed_bboxes = re.sub(r'\[\s*(\d+)\s*,\s*(\d+)\s*\[', r'[\1,\2]', fixed_bboxes)
+
+            try:
+                bboxes_list = json.loads(fixed_bboxes)
+            except json.JSONDecodeError as e:
+                # Try a more aggressive fix - manually parsing for those formats
+                try:
+                    if "[[" in bboxes and "]]" in bboxes:
+                        # Extract all numeric values
+                        import re
+                        numbers = re.findall(r'\d+', bboxes)
+
+                        # Count brackets to determine how many bboxes there should be
+                        # Subtract 1 for the outer brackets
+                        open_brackets = bboxes.count('[') - 1
+                        close_brackets = bboxes.count(']') - 1
+
+                        # Use class list length as a hint if available
+                        try:
+                            cls_count = len(json.loads(cls))
+                        except:
+                            try:
+                                cls_count = len(re.findall(r'\d+', cls))
+                            except:
+                                cls_count = 0
+
+                        # Determine how many bboxes we likely have
+                        num_bboxes = max(open_brackets, close_brackets, len(numbers) // 4, cls_count)
+
+                        # Group numbers in sets of 4 for bounding boxes [x1,y1,x2,y2]
+                        bboxes_list = []
+                        for i in range(0, min(len(numbers), num_bboxes * 4), 4):
+                            if i+3 < len(numbers):
+                                bboxes_list.append([int(numbers[i]), int(numbers[i+1]),
+                                                  int(numbers[i+2]), int(numbers[i+3])])
+
+                        # If we don't have enough boxes, add dummy boxes to match cls count
+                        while len(bboxes_list) < num_bboxes:
+                            bboxes_list.append([0, 0, 100, 100])  # Add dummy box
+                    else:
+                        raise ValueError("Could not parse bboxes format")
+                except Exception as parse_err:
+                    # Provide more helpful error message with example
+                    raise ValueError(f"Invalid bboxes format. Expected format: [[x1,y1,x2,y2], [x1,y1,x2,y2]]. Error: {e}")
+
+        # Parse cls with similar error handling
+        try:
+            cls_list = json.loads(cls)
+        except json.JSONDecodeError:
+            # Clean up the cls format
+            fixed_cls = cls.replace("'", "\"")
+            fixed_cls = fixed_cls.replace(" ", "")
+
+            try:
+                cls_list = json.loads(fixed_cls)
+            except json.JSONDecodeError as e:
+                # If still failing, try to extract numbers directly
+                try:
+                    import re
+                    cls_list = [int(n) for n in re.findall(r'\d+', cls)]
+                except Exception:
+                    raise ValueError(f"Invalid cls format. Expected format: [0, 1, 2]. Error: {e}")
+
+        # Validate data types and formats
+        if not isinstance(bboxes_list, list):
+            raise ValueError("bboxes must be a JSON array of arrays.")
+        if not isinstance(cls_list, list):
+            raise ValueError("cls must be a JSON array of integers.")
+
+        # Check that each bbox is a list of 4 coordinates
+        for i, bbox in enumerate(bboxes_list):
+            if not isinstance(bbox, list) or len(bbox) != 4:
+                raise ValueError(f"Each bounding box must contain exactly 4 values [x1,y1,x2,y2]. Error in box {i+1}: {bbox}")
+
+        # Validate class IDs are sequential starting from 0
+        # Check if lengths match
         if len(bboxes_list) != len(cls_list):
-            raise ValueError("Length of bboxes must match length of cls.")
+            raise ValueError(f"Length of bboxes ({len(bboxes_list)}) must match length of cls ({len(cls_list)}). " +
+                           f"Each bounding box must have a corresponding class ID. " +
+                           f"Please provide the same number of elements in both arrays.")
     except (json.JSONDecodeError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid visual prompts format: {e}")
 

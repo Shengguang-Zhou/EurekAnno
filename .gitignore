@@ -1,8 +1,11 @@
 .venv
-
 frontend/node_modules/
 frontend/build/
-mobileclip_blt.ts
 weights/
-.idea
-dataset
+.idea/
+dataset/
+*/__pycache__
+*.pt
+mobileclip_blt.ts
+**/.claude/settings.local.json
+*.pyc
