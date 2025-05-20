@@ -77,7 +77,7 @@ API 提供以下主要端点：
 
 - Python 3.10
 - PyTorch 2.5+
-- Node.js 14+ (前端)
+- Node.js 16+ (前端)
 - 4GB+ VRAM
 - 支持 CUDA 的 GPU (推荐用于生产环境)
 
