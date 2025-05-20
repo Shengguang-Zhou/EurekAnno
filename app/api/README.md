@@ -215,3 +215,13 @@ result = detect_with_visual_prompts(
     cls=[0]
 )
 ```
+
+## 实时 WebRTC 流式检测
+
+以下 WebSocket 端点基于 `FastRTC`，可从本地摄像头或 RTSP 地址获取视频并实时返回检测结果：
+
+- `ws://<host>/api/v1/yoloe-stream/prompt-free`
+- `ws://<host>/api/v1/yoloe-stream/text-prompt`
+- `ws://<host>/api/v1/yoloe-stream/image-prompt`
+连接后，服务器会持续发送包含检测结果和标注图像的 JSON 数据。
+

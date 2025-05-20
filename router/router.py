@@ -8,10 +8,12 @@
 
 from fastapi import APIRouter
 from app.api.yoloe import router as yoloe_router
+from app.api.rtc_yoloe import router as rtc_router
 
 # Create a "master" API router
 api_router = APIRouter()
 
 # Include the YOLOE router, giving it a prefix and tags
 api_router.include_router(yoloe_router, prefix="/yoloe", tags=["YOLOE"])
+api_router.include_router(rtc_router, prefix="/yoloe-stream", tags=["YOLOE RTC"])
 
