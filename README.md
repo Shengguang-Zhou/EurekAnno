@@ -58,6 +58,9 @@ API 提供以下主要端点：
 - **POST /api/v1/yoloe/image-prompt**：使用图像提示检测物体
 - **POST /api/v1/yoloe/export/yolo**：导出标注为 YOLO 格式
 - **POST /api/v1/yoloe/export/yolo-batch**：批量导出标注为 YOLO 格式
+- **WS /api/v1/yoloe-stream/prompt-free**：实时无提示检测
+- **WS /api/v1/yoloe-stream/text-prompt**：实时文本提示检测
+- **WS /api/v1/yoloe-stream/image-prompt**：实时图像提示检测
 
 详细的 API 文档可在 `/app/api/README.md` 中找到。
 
@@ -84,3 +87,4 @@ API 提供以下主要端点：
 ## 许可证
 
 © 2024 EurekAILab. 保留所有权利。
+
