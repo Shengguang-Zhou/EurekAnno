@@ -99,6 +99,15 @@ class Config:
             Path to YOLOE-SEG-PF model or an empty string if not configured.
         """
         return self.get("models.yoloe.yoloe-seg-pf", "")
+    
+    def get_moondream_model_path(self) -> str:
+        """
+        Get path to Moondream model.
+        
+        Returns:
+            Path to Moondream model or an empty string if not configured.
+        """
+        return self.get("models.moondream.model", "")
 
 
 # Create global configuration instance

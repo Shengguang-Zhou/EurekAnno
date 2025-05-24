@@ -8,10 +8,14 @@
 
 from fastapi import APIRouter
 from app.api.yoloe import router as yoloe_router
+from app.api.moondream import router as moondream_router
 
 # Create a "master" API router
 api_router = APIRouter()
 
 # Include the YOLOE router, giving it a prefix and tags
 api_router.include_router(yoloe_router, prefix="/yoloe", tags=["YOLOE"])
+
+# Include the Moondream router
+api_router.include_router(moondream_router, prefix="/moondream", tags=["Moondream"])
 

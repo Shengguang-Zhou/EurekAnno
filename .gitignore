@@ -9,3 +9,6 @@ dataset/
 mobileclip_blt.ts
 **/.claude/settings.local.json
 *.pyc
+# Byte-code cache
+__pycache__/
+*.py[cod]

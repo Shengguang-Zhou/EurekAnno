@@ -3,3 +3,5 @@ models:
   yoloe:
     yoloe-seg: /home/a/PycharmProjects/EurekAnno/weights/yoloe-11s-seg.pt
     yoloe-seg-pf: /home/a/PycharmProjects/EurekAnno/weights/yoloe-11l-seg-pf.pt
+  moondream:
+    model: /home/a/.cache/huggingface/hub/models--moondream--moondream-2b-2025-04-14-4bit/snapshots/a89c59223ef8b5bb7826780728eeec172727ca84

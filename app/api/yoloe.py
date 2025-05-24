@@ -18,7 +18,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.models.yoloe import BatchExportYoloRequest, ExportYoloRequest
-from app.utils.tools import read_imagefile, encode_mask_to_base64, encode_bgr_image_to_base64
+from app.utils.tools import read_imagefile_async, encode_mask_to_base64, encode_bgr_image_to_base64
 
 # Assuming YOLOE class is correctly defined and imported
 try:
@@ -52,7 +52,7 @@ async def prompt_free_inference(
     retina_masks: bool = Form(False)
 ):
     try:
-        img_bgr = read_imagefile(file)
+        img_bgr = await read_imagefile_async(file)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -107,7 +107,7 @@ async def text_prompt_inference(
     retina_masks: bool = Form(False)
 ):
     try:
-        img_bgr = read_imagefile(file)
+        img_bgr = await read_imagefile_async(file)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -189,7 +189,7 @@ async def image_prompt_inference(
     refer_file: Optional[UploadFile] = File(None, description="Reference image containing visual prompt examples (optional)")
 ):
     try:
-        img_bgr = read_imagefile(file)
+        img_bgr = await read_imagefile_async(file)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid target image: {e}")
     except Exception as e:
@@ -199,7 +199,7 @@ async def image_prompt_inference(
     refer_bgr = None
     if refer_file is not None:
         try:
-            refer_bgr = read_imagefile(refer_file)
+            refer_bgr = await read_imagefile_async(refer_file)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"Invalid reference image: {e}")
         except Exception as e:
